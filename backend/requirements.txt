@@ -9,6 +9,9 @@ psycopg2-binary>=2.9.9
 werkzeug>=3.0.0
 pyjwt>=2.8.0
 
+# Storage dependencies
+supabase>=2.0.0  # For Supabase storage and database
+
 # Development dependencies (optional)
 # pytest>=7.4.0
 # pytest-cov>=4.1.0

@@ -54,6 +54,10 @@ class ProductionConfig(Config):
     # Ensure secret key is set
     if not os.environ.get('SECRET_KEY'):
         raise ValueError("SECRET_KEY environment variable must be set in production")
+    
+    # Production CORS - allow all origins if not specified
+    # This can be restricted later by setting CORS_ORIGINS env var
+    CORS_ORIGINS = os.environ.get('CORS_ORIGINS', '*').split(',')
 
 
 class TestingConfig(Config):

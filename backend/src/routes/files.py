@@ -3,12 +3,13 @@ File management routes with JWT authentication
 """
 import os
 from datetime import datetime
-from flask import Blueprint, request, jsonify, send_file
+from flask import Blueprint, request, jsonify, send_file, redirect
 from werkzeug.utils import secure_filename
 from sqlalchemy import desc
 
 from src.models import db, File
 from src.auth import login_required
+from src.storage import get_storage_service
 
 
 files_bp = Blueprint('files', __name__, url_prefix='/api/files')
@@ -61,22 +62,25 @@ def upload_file(user):
         timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
         filename = f"{user.id}_{timestamp}_{original_filename}"
         
-        # Create upload directory if it doesn't exist
-        upload_dir = os.path.join(os.getcwd(), 'uploads')
-        os.makedirs(upload_dir, exist_ok=True)
+        # Get storage service
+        storage = get_storage_service()
         
-        # Save file
-        file_path = os.path.join(upload_dir, filename)
-        file.save(file_path)
+        # Upload file to storage (local or Supabase)
+        storage_path = storage.upload_file(file, user.id, filename)
+        
+        if not storage_path:
+            return jsonify({'error': 'Failed to upload file to storage'}), 500
         
         # Get file size
-        file_size = os.path.getsize(file_path)
+        file.seek(0, 2)  # Seek to end
+        file_size = file.tell()
+        file.seek(0)  # Reset to beginning
         
         # Create database record
         new_file = File(
             filename=filename,  # Store the unique filename
             original_filename=original_filename,  # Store the original filename
-            file_path=filename,  # Store the unique filename (for backward compatibility)
+            file_path=storage_path,  # Store the storage path (local path or Supabase bucket path)
             file_size=file_size,
             mime_type=file.content_type or 'application/octet-stream',
             user_id=user.id
@@ -201,7 +205,8 @@ def download_file(user, file_id):
     Download a file
     
     Returns:
-        200: File content
+        200: File content (for local storage)
+        302: Redirect to signed URL (for Supabase storage)
         403: Not authorized
         404: File not found
     """
@@ -214,22 +219,34 @@ def download_file(user, file_id):
     if file.user_id != user.id:
         return jsonify({'error': 'Not authorized to download this file'}), 403
     
-    # Get file path
-    file_path = os.path.join(os.getcwd(), 'uploads', file.file_path)
+    # Get storage service
+    storage = get_storage_service()
     
-    if not os.path.exists(file_path):
-        return jsonify({'error': 'File not found on server'}), 404
+    # Get download info based on storage mode
+    signed_url, file_bytes = storage.get_download_info(file.file_path)
     
     # Increment download count
     file.download_count += 1
     db.session.commit()
     
-    return send_file(
-        file_path,
-        as_attachment=True,
-        download_name=file.original_filename,  # Use original filename for download
-        mimetype=file.mime_type
-    )
+    if storage.is_using_supabase():
+        # For Supabase, redirect to the signed URL
+        if signed_url:
+            return redirect(signed_url)
+        else:
+            return jsonify({'error': 'Failed to generate download URL'}), 500
+    else:
+        # For local storage, send the file directly
+        if file_bytes:
+            from io import BytesIO
+            return send_file(
+                BytesIO(file_bytes),
+                as_attachment=True,
+                download_name=file.original_filename,
+                mimetype=file.mime_type
+            )
+        else:
+            return jsonify({'error': 'File not found on server'}), 404
 
 
 @files_bp.route('/<int:file_id>', methods=['PATCH'])
@@ -312,7 +329,13 @@ def delete_file(user, file_id):
         return jsonify({'error': 'Not authorized to delete this file'}), 403
     
     try:
-        # Soft delete
+        # Get storage service
+        storage = get_storage_service()
+        
+        # Delete from storage (optional - you might want to keep files in storage)
+        # storage.delete_file(file.file_path)
+        
+        # Soft delete in database
         file.is_deleted = True
         db.session.commit()
         

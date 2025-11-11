@@ -79,6 +79,12 @@ make docker-up      # Start containers
 make docker-down    # Stop containers
 make docker-build   # Rebuild containers
 make docker-logs    # View logs
+make docker-db-init # Initialize database
+
+# Supabase commands
+make supabase-up    # Start with Supabase backend
+make supabase-down  # Stop Supabase containers
+make supabase-db-init # Initialize Supabase database
 ```
 
 ### Using Scripts
@@ -89,6 +95,30 @@ make docker-logs    # View logs
 # Development without Docker
 ./dev.sh
 ```
+
+### Using Supabase Backend
+
+1. Create a `.env.production` file in the backend directory:
+   ```bash
+   cp backend/.env.production.example backend/.env.production
+   # Edit the file and add your Supabase credentials
+   ```
+
+2. Start services with Supabase:
+   ```bash
+   make supabase-up
+   ```
+
+3. Initialize Supabase database:
+   ```bash
+   make supabase-db-init
+   # Or use the initialization script:
+   ./supabase-init.sh
+   ```
+
+4. Access the application:
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:8000 (connected to Supabase)
 
 ### Manual Setup
 
@@ -108,7 +138,12 @@ make docker-logs    # View logs
    make setup
    ```
 
-3. Access the applications:
+3. Initialize the database:
+   ```bash
+   make docker-db-init
+   ```
+
+4. Access the applications:
    - Frontend: http://localhost:3000
    - Backend API: http://localhost:8000
 
@@ -151,6 +186,10 @@ make docker-logs    # View logs
 - `make docker-down` - Stop Docker containers
 - `make docker-build` - Rebuild Docker containers
 - `make docker-logs` - View Docker logs
+- `make docker-db-init` - Initialize database tables
+- `make supabase-up` - Start with Supabase backend
+- `make supabase-down` - Stop Supabase containers
+- `make supabase-db-init` - Initialize Supabase database
 - `make clean` - Clean build artifacts
 - `make test` - Run tests
 - `make lint` - Run linters

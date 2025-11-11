@@ -2,7 +2,7 @@
 Main Flask application
 """
 import os
-from flask import Flask, jsonify
+from flask import Flask, jsonify, make_response, request
 from flask_cors import CORS
 from flask_migrate import Migrate
 from dotenv import load_dotenv
@@ -24,11 +24,32 @@ app.config.from_object(config)
 # Initialize extensions
 db.init_app(app)
 migrate = Migrate(app, db)
-CORS(app, origins=app.config['CORS_ORIGINS'])
+
+# Configure CORS with more comprehensive settings for production
+cors_config = {
+    'origins': app.config['CORS_ORIGINS'],
+    'supports_credentials': True,
+    'allow_headers': ['Content-Type', 'Authorization'],
+    'methods': ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    'expose_headers': ['Content-Range', 'X-Content-Range']
+}
+CORS(app, **cors_config)
 
 # Register blueprints
 app.register_blueprint(auth_bp)
 app.register_blueprint(files_bp)
+
+
+# Handle preflight requests
+@app.before_request
+def handle_preflight():
+    if request.method == "OPTIONS":
+        response = make_response()
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        response.headers.add("Access-Control-Allow-Headers", "Content-Type,Authorization")
+        response.headers.add("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS")
+        response.headers.add("Access-Control-Allow-Credentials", "true")
+        return response
 
 
 @app.route("/")

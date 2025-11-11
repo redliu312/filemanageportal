@@ -46,6 +46,9 @@ services:
         uv venv /app/.venv && . /app/.venv/bin/activate && uv pip install -r /app/requirements.txt
       fi &&
       . /app/.venv/bin/activate && uv pip install -r /app/requirements.txt &&
+      echo 'Waiting for database...' &&
+      sleep 5 &&
+      python manage.py init 2>/dev/null || echo 'Database already initialized' &&
       python -m flask run --host=0.0.0.0 --port=5000
       "
     healthcheck:
