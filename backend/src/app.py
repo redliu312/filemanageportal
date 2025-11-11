@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 from src.config import get_config
 from src.models import db
-from src.routes import auth_bp
+from src.routes import auth_bp, files_bp
 
 # Load environment variables
 load_dotenv()
@@ -28,6 +28,7 @@ CORS(app, origins=app.config['CORS_ORIGINS'])
 
 # Register blueprints
 app.register_blueprint(auth_bp)
+app.register_blueprint(files_bp)
 
 
 @app.route("/")
