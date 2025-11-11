@@ -3,7 +3,7 @@ name = "backend"
 version = "0.1.0"
 description = "Flask backend for Vercel deployment"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.9"
 dependencies = [
     "flask>=3.0.0",
     "python-dotenv>=1.0.0",
@@ -31,9 +31,9 @@ build-backend = "hatchling.build"
 
 [tool.black]
 line-length = 88
-target-version = ['py313']
+target-version = ['py39']
 
 [tool.mypy]
-python_version = "3.13"
+python_version = "3.9"
 warn_return_any = true
 warn_unused_configs = true

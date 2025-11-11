@@ -1,0 +1,72 @@
+# Docker Compose configuration for testing with Supabase
+# This uses Supabase for both database and file storage
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../docker/backend.Dockerfile
+    container_name: flask-backend-supabase
+    ports:
+      - "8000:5000"
+    env_file:
+      - ./backend/.env.production  # Uses your Supabase credentials
+    environment:
+      - FLASK_ENV=production
+      - PYTHONUNBUFFERED=1
+      - STORAGE_MODE=supabase  # Force Supabase storage mode
+      - CORS_ORIGINS=http://localhost:3000  # Allow frontend access
+    volumes:
+      - ./backend:/app
+      - backend-venv:/app/.venv
+    networks:
+      - app-network
+    command: >
+      sh -c "
+      if [ ! -f /app/.venv/bin/activate ]; then
+        uv venv /app/.venv && . /app/.venv/bin/activate && uv pip install -r /app/requirements.txt
+      fi &&
+      . /app/.venv/bin/activate && uv pip install -r /app/requirements.txt &&
+      echo 'Waiting for Supabase database connection...' &&
+      sleep 10 &&
+      echo 'Initializing database...' &&
+      python manage.py init 2>/dev/null || echo 'Database already initialized' &&
+      python -m flask run --host=0.0.0.0 --port=5000
+      "
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../docker/frontend.Dockerfile
+    container_name: nextjs-frontend-supabase
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - ./frontend/next.config.js:/app/next.config.js
+      - ./frontend/tailwind.config.ts:/app/tailwind.config.ts
+      - ./frontend/postcss.config.js:/app/postcss.config.js
+      - ./frontend/tsconfig.json:/app/tsconfig.json
+      - /app/node_modules  # Preserve node_modules from the image
+      - /app/.next  # Preserve Next.js build cache
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  backend-venv:
