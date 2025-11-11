@@ -1,0 +1,35 @@
+[project]
+name = "backend"
+version = "0.1.0"
+description = "Flask backend for Vercel deployment"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "flask>=3.0.0",
+    "python-dotenv>=1.0.0",
+    "gunicorn>=21.2.0",
+    "cors>=1.0.1",
+    "flask-cors>=4.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "black>=23.0.0",
+    "flake8>=6.0.0",
+    "mypy>=1.5.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.black]
+line-length = 88
+target-version = ['py313']
+
+[tool.mypy]
+python_version = "3.13"
+warn_return_any = true
+warn_unused_configs = true

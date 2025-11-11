@@ -1,0 +1,58 @@
+# Git
+.git
+.gitignore
+
+# Docker
+docker-compose*.yml
+Dockerfile*
+.dockerignore
+
+# Node
+node_modules
+npm-debug.log
+yarn-error.log
+.next
+out
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info
+.venv
+venv
+ENV
+env
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.*
+
+# Logs
+*.log
+logs/
+
+# Testing
+coverage
+.coverage
+.pytest_cache
+htmlcov
+
+# Build
+dist
+build
+
+# Vercel
+.vercel
