@@ -40,6 +40,14 @@ services:
         condition: service_healthy
     networks:
       - app-network
+    command: >
+      sh -c "
+      if [ ! -f /app/.venv/bin/activate ]; then
+        uv venv /app/.venv && . /app/.venv/bin/activate && uv pip install -r /app/requirements.txt
+      fi &&
+      . /app/.venv/bin/activate && uv pip install -r /app/requirements.txt &&
+      python -m flask run --host=0.0.0.0 --port=5000
+      "
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
       interval: 30s

@@ -7,8 +7,9 @@ from flask_cors import CORS
 from flask_migrate import Migrate
 from dotenv import load_dotenv
 
-from .config import get_config
-from .models import db
+from src.config import get_config
+from src.models import db
+from src.routes import auth_bp
 
 # Load environment variables
 load_dotenv()
@@ -24,6 +25,9 @@ app.config.from_object(config)
 db.init_app(app)
 migrate = Migrate(app, db)
 CORS(app, origins=app.config['CORS_ORIGINS'])
+
+# Register blueprints
+app.register_blueprint(auth_bp)
 
 
 @app.route("/")
@@ -63,7 +67,7 @@ def init_db():
         db.create_all()
         return jsonify({
             "message": "Database tables created successfully",
-            "tables": db.metadata.tables.keys()
+            "tables": list(db.metadata.tables.keys())
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
