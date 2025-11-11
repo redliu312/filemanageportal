@@ -1,4 +1,23 @@
 services:
+  db:
+    image: postgres:16-alpine
+    container_name: postgres-db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=filesvc
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   backend:
     build:
       context: ./backend
@@ -10,9 +29,15 @@ services:
       - FLASK_DEBUG=True
       - FLASK_ENV=development
       - PYTHONUNBUFFERED=1
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/filesvc
+      - SECRET_KEY=dev-secret-key-change-in-production
     volumes:
       - ./backend:/app
       - backend-venv:/app/.venv
+      - upload-files:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
     networks:
       - app-network
     healthcheck:
@@ -50,3 +75,5 @@ networks:
 
 volumes:
   backend-venv:
+  postgres-data:
+  upload-files:

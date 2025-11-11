@@ -61,3 +61,15 @@ Thumbs.db
 
 # Vercel
 .vercel
+# Uploads
+uploads/
+*.upload
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Migrations (keep structure, ignore versions)
+migrations/versions/*.pyc
+migrations/versions/__pycache__/

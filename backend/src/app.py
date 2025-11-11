@@ -4,7 +4,11 @@ Main Flask application
 import os
 from flask import Flask, jsonify
 from flask_cors import CORS
+from flask_migrate import Migrate
 from dotenv import load_dotenv
+
+from .config import get_config
+from .models import db
 
 # Load environment variables
 load_dotenv()
@@ -12,12 +16,14 @@ load_dotenv()
 # Create Flask app
 app = Flask(__name__)
 
-# Configure CORS
-CORS(app, origins=os.getenv("ALLOWED_ORIGINS", "*").split(","))
+# Load configuration
+config = get_config()
+app.config.from_object(config)
 
-# Configuration
-app.config["DEBUG"] = os.getenv("FLASK_DEBUG", "False").lower() == "true"
-app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-secret-key")
+# Initialize extensions
+db.init_app(app)
+migrate = Migrate(app, db)
+CORS(app, origins=app.config['CORS_ORIGINS'])
 
 
 @app.route("/")
@@ -33,10 +39,34 @@ def index():
 @app.route("/api/health")
 def health():
     """Health check endpoint"""
+    # Check database connection
+    try:
+        db.session.execute(db.text('SELECT 1'))
+        db_status = "connected"
+    except Exception as e:
+        db_status = f"error: {str(e)}"
+    
     return jsonify({
         "status": "healthy",
-        "service": "backend-api"
+        "service": "backend-api",
+        "database": db_status
     })
+
+
+@app.route("/api/db/init")
+def init_db():
+    """Initialize database tables (development only)"""
+    if not app.config['DEBUG']:
+        return jsonify({"error": "Not available in production"}), 403
+    
+    try:
+        db.create_all()
+        return jsonify({
+            "message": "Database tables created successfully",
+            "tables": db.metadata.tables.keys()
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":
