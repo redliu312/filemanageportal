@@ -74,8 +74,9 @@ def upload_file(user):
         
         # Create database record
         new_file = File(
-            filename=original_filename,
-            file_path=filename,  # Store the unique filename
+            filename=filename,  # Store the unique filename
+            original_filename=original_filename,  # Store the original filename
+            file_path=filename,  # Store the unique filename (for backward compatibility)
             file_size=file_size,
             mime_type=file.content_type or 'application/octet-stream',
             user_id=user.id
@@ -88,7 +89,7 @@ def upload_file(user):
             'message': 'File uploaded successfully',
             'file': {
                 'id': new_file.id,
-                'filename': new_file.filename,
+                'filename': new_file.original_filename,  # Return original filename to user
                 'size': new_file.file_size,
                 'mime_type': new_file.mime_type,
                 'uploaded_at': new_file.uploaded_at.isoformat()
@@ -97,9 +98,12 @@ def upload_file(user):
         
     except Exception as e:
         db.session.rollback()
+        import traceback
+        traceback.print_exc()  # Print full traceback to logs
         return jsonify({
             'error': 'Failed to upload file',
-            'message': str(e)
+            'message': str(e),
+            'type': type(e).__name__
         }), 500
 
 
@@ -138,7 +142,7 @@ def list_files(user):
     
     files = [{
         'id': f.id,
-        'filename': f.filename,
+        'filename': f.original_filename,  # Return original filename to user
         'size': f.file_size,
         'mime_type': f.mime_type,
         'uploaded_at': f.uploaded_at.isoformat(),
@@ -181,7 +185,7 @@ def get_file(user, file_id):
     return jsonify({
         'file': {
             'id': file.id,
-            'filename': file.filename,
+            'filename': file.original_filename,  # Return original filename to user
             'size': file.file_size,
             'mime_type': file.mime_type,
             'uploaded_at': file.uploaded_at.isoformat(),
@@ -223,7 +227,7 @@ def download_file(user, file_id):
     return send_file(
         file_path,
         as_attachment=True,
-        download_name=file.filename,
+        download_name=file.original_filename,  # Use original filename for download
         mimetype=file.mime_type
     )
 
@@ -265,15 +269,15 @@ def rename_file(user, file_id):
         return jsonify({'error': 'Filename cannot be empty'}), 400
     
     try:
-        # Update filename
-        file.filename = secure_filename(new_filename)
+        # Update original filename (the one shown to user)
+        file.original_filename = secure_filename(new_filename)
         db.session.commit()
         
         return jsonify({
             'message': 'File renamed successfully',
             'file': {
                 'id': file.id,
-                'filename': file.filename,
+                'filename': file.original_filename,
                 'size': file.file_size,
                 'mime_type': file.mime_type
             }

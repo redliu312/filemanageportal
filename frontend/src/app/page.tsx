@@ -68,12 +68,21 @@ export default function Home() {
             </div>
           </div>
 
-          <button
-            onClick={handleLogout}
-            className="w-full bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700 transition-colors"
-          >
-            Logout
-          </button>
+          <div className="space-y-3">
+            <a
+              href="/files"
+              className="block w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition-colors text-center"
+            >
+              📁 Manage Files
+            </a>
+            
+            <button
+              onClick={handleLogout}
+              className="w-full bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700 transition-colors"
+            >
+              Logout
+            </button>
+          </div>
         </div>
       </div>
     );
