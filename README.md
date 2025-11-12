@@ -1,50 +1,172 @@
 # Full Stack Application - Flask + Next.js
 
 A modern full-stack application with Python Flask backend and Next.js frontend, designed for deployment on Vercel.
+This repo is co-work with the roo code vs code extension with claude-4.5 llm models
 
-## Project Structure
+
+
+## arcitecture and sequence diagrams
+
+### file upload
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant API Client
+    participant Backend API
+    participant Storage Service
+    participant Storage (Local/Supabase)
+    participant Database
+
+    User->>Frontend: Select file to upload
+    Frontend->>Frontend: Validate file locally
+    Frontend->>API Client: Call uploadFile(file)
+    API Client->>API Client: Create FormData with file
+    API Client->>Backend API: POST /api/files with FormData
+    Backend API->>Backend API: Validate file type & size
+    Backend API->>Backend API: Generate unique filename
+    Backend API->>Storage Service: Upload file
+    Storage Service->>Storage (Local/Supabase): Save file
+    Storage (Local/Supabase)-->>Storage Service: Return storage path
+    Storage Service-->>Backend API: Return storage path
+    Backend API->>Database: Create File record
+    Database-->>Backend API: Confirm save
+    Backend API-->>Frontend: Return file metadata
+    Frontend->>Frontend: Update UI with success
 
 ```
-.
-├── backend/                 # Flask backend application
-│   ├── api/                # API endpoints (Vercel serverless functions)
-│   ├── src/                # Source code
-│   ├── tests/              # Backend tests
-│   ├── .env.example        # Backend environment template
-│   ├── .gitignore          # Backend gitignore
-│   ├── .python-version     # Python version specification
-│   ├── pyproject.toml      # Python project configuration
-│   ├── README.md           # Backend documentation
-│   ├── requirements.txt    # Python dependencies
-│   └── vercel.json         # Vercel configuration
-├── frontend/               # Next.js frontend application
-│   ├── public/             # Static assets
-│   ├── src/                # Source code
-│   │   └── app/           # App router
-│   │       ├── globals.css # Global styles
-│   │       ├── layout.tsx  # Root layout
-│   │       └── page.tsx    # Home page
-│   ├── .env.example        # Frontend environment template
-│   ├── .eslintrc.json      # ESLint configuration
-│   ├── .gitignore          # Frontend gitignore
-│   ├── next.config.js      # Next.js configuration
-│   ├── package.json        # Node dependencies
-│   ├── postcss.config.js   # PostCSS configuration
-│   ├── README.md           # Frontend documentation
-│   ├── tailwind.config.ts  # Tailwind CSS configuration
-│   ├── tsconfig.json       # TypeScript configuration
-│   └── vercel.json         # Vercel configuration
-├── docker/                 # Docker configuration files
-│   ├── backend.Dockerfile  # Backend Docker image
-│   └── frontend.Dockerfile # Frontend Docker image
-├── .dockerignore           # Docker ignore file
-├── .gitignore              # Root gitignore
-├── dev.sh                  # Development script (no Docker)
-├── docker-compose.yml      # Docker Compose configuration
-├── Makefile                # Common development tasks
-├── README.md               # This file
-└── setup.sh                # Initial setup script
+
+### login
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant AuthContext
+    participant API Client
+    participant Backend
+    participant Database
+    participant JWT
+
+    User->>Frontend: Enter email & password
+    Frontend->>AuthContext: Call login(email, password)
+    AuthContext->>API Client: api.login(email, password)
+    API Client->>Backend: POST /api/auth/login
+    Backend->>Database: Query user by email
+    Database-->>Backend: Return user record
+    Backend->>Backend: Verify password hash
+    Backend->>JWT: Generate token with user_id
+    JWT-->>Backend: Return signed token
+    Backend-->>API Client: Return {user, token}
+    API Client-->>AuthContext: Return response
+    AuthContext->>AuthContext: Store token in localStorage
+    AuthContext->>AuthContext: Update user state
+    AuthContext-->>Frontend: Login successful
+    Frontend->>Frontend: Redirect to dashboard
 ```
+
+### logout
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant AuthContext
+    participant API Client
+    participant Backend
+
+    User->>Frontend: Click logout
+    Frontend->>AuthContext: Call logout()
+    AuthContext->>AuthContext: Remove token from localStorage
+    AuthContext->>AuthContext: Set user to null
+    AuthContext->>API Client: api.logout() (optional)
+    API Client->>Backend: POST /api/auth/logout
+    Backend-->>API Client: Return success message
+    AuthContext->>Frontend: Update UI
+    Frontend->>Frontend: Redirect to login page
+```
+
+### signup
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant AuthContext
+    participant API Client
+    participant Backend
+    participant Database
+    participant JWT
+
+    User->>Frontend: Enter email, password, username
+    Frontend->>AuthContext: Call signup(email, password, username)
+    AuthContext->>API Client: api.signup(email, password, username)
+    API Client->>Backend: POST /api/auth/signup
+    Backend->>Backend: Validate input data
+    Backend->>Backend: Hash password
+    Backend->>Database: Create new user
+    Database-->>Backend: Return user record
+    Backend->>JWT: Generate token with user_id
+    JWT-->>Backend: Return signed token
+    Backend-->>API Client: Return {user, token}
+    API Client-->>AuthContext: Return response
+    AuthContext->>AuthContext: Store token in localStorage
+    AuthContext->>AuthContext: Update user state
+    AuthContext-->>Frontend: Signup successful
+    Frontend->>Frontend: Redirect to dashboard
+```
+
+### authentication, happens on every flask login required route
+
+```mermaid
+sequenceDiagram
+    participant Frontend
+    participant API Client
+    participant Backend
+    participant JWT
+    participant Database
+    participant Route Handler
+
+    Frontend->>API Client: Make API request
+    API Client->>API Client: Get token from localStorage
+    API Client->>Backend: Request with Authorization: Bearer {token}
+    Backend->>Backend: Extract token from header
+    Backend->>JWT: Decode & verify token
+    JWT-->>Backend: Return payload {user_id, exp, iat}
+    Backend->>Database: Get user by user_id
+    Database-->>Backend: Return user object
+    Backend->>Route Handler: Call handler with user
+    Route Handler-->>Backend: Return response
+    Backend-->>API Client: Return response
+    API Client-->>Frontend: Return data
+```
+
+### when the user need to login
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Browser
+    participant HomePage
+    participant AuthContext
+    
+    User->>Browser: Visit website
+    Browser->>AuthContext: Check localStorage token
+    
+    alt No token or invalid token
+        AuthContext->>HomePage: user = null
+        HomePage->>User: Show Login/Signup form
+    else Valid token exists
+        AuthContext->>HomePage: user = {id, email, username}
+        HomePage->>User: Show user info page
+    end
+    
+    opt User clicks Logout
+        User->>HomePage: Click Logout
+        HomePage->>AuthContext: Clear token
+        AuthContext->>HomePage: user = null
+        HomePage->>User: Show Login/Signup form
+    end
+
+```
+
 
 ## Tech Stack
 
@@ -66,34 +188,13 @@ A modern full-stack application with Python Flask backend and Next.js frontend, 
 
 ## Quick Start
 
-### Using Make (Recommended)
-```bash
-# Initial setup with Docker
-make setup
-
-# Run development servers locally (no Docker)
-make dev
-
-# Docker commands
-make docker-up      # Start containers
-make docker-down    # Stop containers
-make docker-build   # Rebuild containers
-make docker-logs    # View logs
-make docker-db-init # Initialize database
-
-# Supabase commands
-make supabase-up    # Start with Supabase backend
-make supabase-down  # Stop Supabase containers
-make supabase-db-init # Initialize Supabase database
-```
 
 ### Using Scripts
 ```bash
 # Setup with Docker
 ./setup.sh
 
-# Development without Docker
-./dev.sh
+
 ```
 
 ### Using Supabase Backend
@@ -134,8 +235,6 @@ make supabase-db-init # Initialize Supabase database
 2. Run the setup script:
    ```bash
    ./setup.sh
-   # or
-   make setup
    ```
 
 3. Initialize the database:
@@ -256,14 +355,3 @@ cd backend && python -m pytest
 cd frontend && npm test
 ```
 
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## License
-
-This project is open source and available under the MIT License.
