@@ -1,6 +1,8 @@
 # Full Stack Application - Flask + Next.js
 
-![Demo](asserts/demo.gif)
+<p align="center">
+  <img src="asserts/demo.gif" width="300" alt="Demo animation">
+</p>
 A modern full-stack application with Python Flask backend and Next.js frontend, designed for deployment on Vercel.
 This repo is **co-work with the roo code vs code extension with claude-4.5 llm models**.
 
@@ -13,6 +15,7 @@ This repo is **co-work with the roo code vs code extension with claude-4.5 llm m
 |  file upload, download, delete, pagination list |  ✅ |  |
 |  file upload progress bar | ❌ |  |
 |  file metadata modification(file title) | ✅ |  |
+|Supabase free tier sql , storage usage|  ✅ |
 | backend flask deployed to vercel serverless function  | ❌ |
 | frontend next.js deploed to vercel | ❌   |
 | vercel and github integration | ❌  |
