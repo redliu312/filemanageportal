@@ -3,7 +3,18 @@
 A modern full-stack application with Python Flask backend and Next.js frontend, designed for deployment on Vercel.
 This repo is **co-work with the roo code vs code extension with claude-4.5 llm models**.
 
+## MVP status
 
+| feature | done | Notes |
+|------|---------|-------|
+| Setup development environment | ✅  | Installed dependencies and configured environment |
+| signup, login, logout | ✅  |  |
+|  file upload, download, delete, pagination list |  ✅ |  |
+|  file upload progress bar | ❌ |  |
+|  file metadata modification(file title) | ✅ |  |
+| backend flask deployed to vercel serverless function  | ❌ |
+| frontend next.js deploed to vercel | ❌   |
+| vercel and github integration | ❌  |
 
 ## arcitecture and sequence diagrams
 
