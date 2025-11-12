@@ -1,7 +1,7 @@
 # Full Stack Application - Flask + Next.js
 
 A modern full-stack application with Python Flask backend and Next.js frontend, designed for deployment on Vercel.
-This repo is co-work with the roo code vs code extension with claude-4.5 llm models
+This repo is **co-work with the roo code vs code extension with claude-4.5 llm models**.
 
 
 
