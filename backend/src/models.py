@@ -128,70 +128,70 @@ class File(db.Model):
     def __repr__(self):
         return f'<File {self.filename} (User: {self.user_id})>'
 
-
-class FileShare(db.Model):
-    """Model for sharing files with other users or via public links."""
+#TODO: currently this is useless, but will be good if implement the file share feature.
+# class FileShare(db.Model):
+#     """Model for sharing files with other users or via public links."""
     
-    __tablename__ = 'file_shares'
+#     __tablename__ = 'file_shares'
     
-    id = db.Column(db.Integer, primary_key=True)
-    file_id = db.Column(db.Integer, db.ForeignKey('files.id'), nullable=False, index=True)
-    file = db.relationship('File', backref='shares')
+#     id = db.Column(db.Integer, primary_key=True)
+#     file_id = db.Column(db.Integer, db.ForeignKey('files.id'), nullable=False, index=True)
+#     file = db.relationship('File', backref='shares')
     
-    # Share token for public access
-    share_token = db.Column(db.String(64), unique=True, nullable=False, index=True)
+#     # Share token for public access
+#     share_token = db.Column(db.String(64), unique=True, nullable=False, index=True)
     
-    # Optional: Share with specific user
-    shared_with_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
-    shared_with_user = db.relationship('User', foreign_keys=[shared_with_user_id])
+#     # Optional: Share with specific user
+#     shared_with_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
+#     shared_with_user = db.relationship('User', foreign_keys=[shared_with_user_id])
     
-    # Permissions
-    can_download = db.Column(db.Boolean, default=True, nullable=False)
-    can_view = db.Column(db.Boolean, default=True, nullable=False)
+#     # Permissions
+#     can_download = db.Column(db.Boolean, default=True, nullable=False)
+#     can_view = db.Column(db.Boolean, default=True, nullable=False)
     
-    # Expiration
-    expires_at = db.Column(db.DateTime, nullable=True)
+#     # Expiration
+#     expires_at = db.Column(db.DateTime, nullable=True)
     
-    # Timestamps
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    accessed_count = db.Column(db.Integer, default=0, nullable=False)
-    last_accessed_at = db.Column(db.DateTime, nullable=True)
+#     # Timestamps
+#     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+#     accessed_count = db.Column(db.Integer, default=0, nullable=False)
+#     last_accessed_at = db.Column(db.DateTime, nullable=True)
     
-    # Status
-    is_active = db.Column(db.Boolean, default=True, nullable=False)
+#     # Status
+#     is_active = db.Column(db.Boolean, default=True, nullable=False)
     
-    def is_expired(self):
-        """Check if the share link has expired."""
-        if self.expires_at is None:
-            return False
-        return datetime.utcnow() > self.expires_at
+#     def is_expired(self):
+#         """Check if the share link has expired."""
+#         if self.expires_at is None:
+#             return False
+#         return datetime.utcnow() > self.expires_at
     
-    def is_valid(self):
-        """Check if the share is valid (active and not expired)."""
-        return self.is_active and not self.is_expired()
+#     def is_valid(self):
+#         """Check if the share is valid (active and not expired)."""
+#         return self.is_active and not self.is_expired()
     
-    def increment_access_count(self):
-        """Increment the access counter."""
-        self.accessed_count += 1
-        self.last_accessed_at = datetime.utcnow()
-        db.session.commit()
+#     def increment_access_count(self):
+#         """Increment the access counter."""
+#         self.accessed_count += 1
+#         self.last_accessed_at = datetime.utcnow()
+#         db.session.commit()
     
-    def to_dict(self):
-        """Convert share to dictionary representation."""
-        return {
-            'id': self.id,
-            'file_id': self.file_id,
-            'share_token': self.share_token,
-            'shared_with_user_id': self.shared_with_user_id,
-            'can_download': self.can_download,
-            'can_view': self.can_view,
-            'expires_at': self.expires_at.isoformat() if self.expires_at else None,
-            'created_at': self.created_at.isoformat(),
-            'accessed_count': self.accessed_count,
-            'last_accessed_at': self.last_accessed_at.isoformat() if self.last_accessed_at else None,
-            'is_active': self.is_active,
-            'is_expired': self.is_expired(),
-        }
+#     def to_dict(self):
+#         """Convert share to dictionary representation."""
+#         return {
+#             'id': self.id,
+#             'file_id': self.file_id,
+#             'share_token': self.share_token,
+#             'shared_with_user_id': self.shared_with_user_id,
+#             'can_download': self.can_download,
+#             'can_view': self.can_view,
+#             'expires_at': self.expires_at.isoformat() if self.expires_at else None,
+#             'created_at': self.created_at.isoformat(),
+#             'accessed_count': self.accessed_count,
+#             'last_accessed_at': self.last_accessed_at.isoformat() if self.last_accessed_at else None,
+#             'is_active': self.is_active,
+#             'is_expired': self.is_expired(),
+#         }
     
-    def __repr__(self):
-        return f'<FileShare {self.share_token} for File {self.file_id}>'
+#     def __repr__(self):
+#         return f'<FileShare {self.share_token} for File {self.file_id}>'

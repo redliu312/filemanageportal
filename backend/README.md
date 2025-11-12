@@ -49,7 +49,7 @@ This application uses PostgreSQL with SQLAlchemy ORM and Flask-Migrate for migra
   - Fields: is_public, is_deleted, deleted_at, download_count
   - Relationships: owner (many-to-one with User), shares (one-to-many with FileShare)
 
-- **FileShare**: File sharing with users or public links
+- **FileShare**: File sharing with users or public links(NOT DONE, yet)
   - Fields: id, file_id, share_token, shared_with_user_id
   - Fields: can_download, can_view, expires_at, created_at, accessed_count, last_accessed_at, is_active
   - Relationships: file (many-to-one), shared_with_user (many-to-one with User)
