@@ -20,6 +20,19 @@ This repo is **co-work with the roo code vs code extension with claude-4.5 llm m
 | frontend next.js deploed to vercel | ❌   |
 | vercel and github integration | ❌  |
 
+
+## trade off and the future enhancmements
+
+1. Simple JWT authentication with localStorage
+the token only expired after 24 hours and no refresh mechanisms.
+
+2. soft delete which make the file still occupy the storage spaces
+
+3. no progress bar for file uploads
+
+4. ** the demo still only run on local , not yet to the vercel or other cloud. **
+
+
 ## arcitecture and sequence diagrams
 
 ### file upload
