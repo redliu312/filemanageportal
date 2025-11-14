@@ -3,7 +3,7 @@ name = "backend"
 version = "0.1.0"
 description = "Flask backend for Vercel deployment"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.12"
 dependencies = [
     "flask>=3.0.0",
     "python-dotenv>=1.0.0",
@@ -15,6 +15,9 @@ dependencies = [
     "psycopg2-binary>=2.9.9",
     "werkzeug>=3.0.0",
 ]
+
+[project.scripts]
+app = "src.app:app"
 
 [project.optional-dependencies]
 dev = [
@@ -31,9 +34,9 @@ build-backend = "hatchling.build"
 
 [tool.black]
 line-length = 88
-target-version = ['py39']
+target-version = ['py312']
 
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.12"
 warn_return_any = true
 warn_unused_configs = true

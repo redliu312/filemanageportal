@@ -2,6 +2,8 @@
 Main Flask application
 """
 import os
+import logging
+import sys
 from flask import Flask, jsonify, make_response, request
 from flask_cors import CORS
 from flask_migrate import Migrate
@@ -14,12 +16,46 @@ from src.routes import auth_bp, files_bp
 # Load environment variables
 load_dotenv()
 
+# Set Python unbuffered output
+os.environ['PYTHONUNBUFFERED'] = '1'
+
 # Create Flask app
 app = Flask(__name__)
 
 # Load configuration
 config = get_config()
 app.config.from_object(config)
+
+# Configure Flask logging based on environment variable
+log_level = os.getenv('LOG_LEVEL', 'INFO').upper()
+if log_level not in ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']:
+    log_level = 'INFO'
+
+# Configure logging using Flask's built-in logger
+if not app.debug:
+    # In production, log to stdout for Vercel
+    app.logger.handlers.clear()
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(logging.Formatter(
+        '[%(asctime)s] %(levelname)s in %(module)s: %(message)s'
+    ))
+    app.logger.addHandler(handler)
+    app.logger.setLevel(getattr(logging, log_level))
+    
+    # Also configure root logger for libraries
+    logging.basicConfig(
+        level=getattr(logging, log_level),
+        format='[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
+        stream=sys.stdout
+    )
+else:
+    # In development, Flask's default logging is fine
+    app.logger.setLevel(getattr(logging, log_level))
+
+# Log startup information
+app.logger.info(f"Starting Flask app with log level: {log_level}")
+app.logger.info(f"Environment: {os.getenv('FLASK_ENV', 'development')}")
+app.logger.info(f"Storage mode: {os.getenv('STORAGE_MODE', 'local')}")
 
 # Initialize extensions
 db.init_app(app)
@@ -58,7 +94,7 @@ def index():
     return jsonify({
         "message": "Flask API is running",
         "version": "0.1.0",
-        "environment": os.getenv("ENVIRONMENT", "development")
+        "environment": os.getenv("FLASK_ENV", "development")
     })
 
 

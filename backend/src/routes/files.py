@@ -10,6 +10,7 @@ from sqlalchemy import desc
 from src.models import db, File
 from src.auth import login_required
 from src.storage import get_storage_service
+from flask import current_app
 
 
 files_bp = Blueprint('files', __name__, url_prefix='/api/files')
@@ -55,20 +56,29 @@ def upload_file(user):
         }), 400
     
     try:
+        current_app.logger.info(f"Starting file upload for user {user.id}")
+        current_app.logger.debug(f"Original filename: {file.filename}")
+        current_app.logger.debug(f"Content type: {file.content_type}")
+        
         # Secure the filename
         original_filename = secure_filename(file.filename)
         
         # Generate unique filename to avoid conflicts
         timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
         filename = f"{user.id}_{timestamp}_{original_filename}"
+        current_app.logger.debug(f"Generated unique filename: {filename}")
         
         # Get storage service
         storage = get_storage_service()
+        current_app.logger.info(f"Storage service initialized, mode: {storage.storage_mode}")
         
         # Upload file to storage (local or Supabase)
+        current_app.logger.info("Calling storage.upload_file()")
         storage_path = storage.upload_file(file, user.id, filename)
+        current_app.logger.info(f"Storage upload result: {storage_path}")
         
         if not storage_path:
+            current_app.logger.error("Storage upload returned None/empty path")
             return jsonify({'error': 'Failed to upload file to storage'}), 500
         
         # Get file size
@@ -89,6 +99,8 @@ def upload_file(user):
         db.session.add(new_file)
         db.session.commit()
         
+        current_app.logger.info(f"File record created in database with ID: {new_file.id}")
+        
         return jsonify({
             'message': 'File uploaded successfully',
             'file': {
@@ -102,8 +114,8 @@ def upload_file(user):
         
     except Exception as e:
         db.session.rollback()
-        import traceback
-        traceback.print_exc()  # Print full traceback to logs
+        current_app.logger.error(f"File upload failed: {str(e)}")
+        current_app.logger.exception("Full traceback:")
         return jsonify({
             'error': 'Failed to upload file',
             'message': str(e),

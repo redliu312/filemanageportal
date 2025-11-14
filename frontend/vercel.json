@@ -5,11 +5,6 @@
   "installCommand": "npm install",
   "outputDirectory": ".next",
   "env": {
-    "NEXT_PUBLIC_API_URL": "@backend_url"
-  },
-  "build": {
-    "env": {
-      "NEXT_PUBLIC_API_URL": "@backend_url"
-    }
+    "NEXT_PUBLIC_API_URL": "https://fsbe.vercel.app"
   }
 }
