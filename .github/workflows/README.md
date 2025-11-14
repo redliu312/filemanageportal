@@ -47,10 +47,12 @@ The Vercel project ID for your frontend (when you create it). Follow the same pr
   - Manual trigger (workflow_dispatch)
 - Deploys to production on `main` branch pushes
 - Creates preview deployments for pull requests
+- Uses simplified `vercel --prod` command that matches local deployment
 
 ### `deploy-frontend.yml`
 - Same trigger conditions as backend but for frontend files
 - Ready to use when you set up your frontend Vercel project
+- Uses the same simplified deployment approach
 
 ## Usage
 
@@ -64,3 +66,5 @@ Once all secrets are configured:
 - The workflows use path filters to only run when relevant files change
 - Preview deployments are automatically created for pull requests
 - The workflows will comment preview URLs on pull requests for easy testing
+- The simplified deployment approach (`vercel --prod`) ensures dependencies are installed correctly
+- The `--yes` flag is used to skip interactive prompts in CI environment
