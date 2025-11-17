@@ -36,20 +36,33 @@ def upload_file(user):
         400: No file provided or invalid file
         413: File too large
     """
+    # Log request details
+    current_app.logger.info(f"=== FILE UPLOAD REQUEST ===")
+    current_app.logger.info(f"User ID: {user.id}")
+    current_app.logger.info(f"Content-Type: {request.content_type}")
+    current_app.logger.info(f"Content-Length: {request.content_length}")
+    current_app.logger.info(f"MAX_CONTENT_LENGTH config: {current_app.config.get('MAX_CONTENT_LENGTH')}")
+    current_app.logger.info(f"Request files: {list(request.files.keys())}")
+    
     # Check if file is in request
     if 'file' not in request.files:
+        current_app.logger.error("No file provided in request")
         return jsonify({'error': 'No file provided'}), 400
     
     file = request.files['file']
     
     # Check if filename is empty
     if file.filename == '':
+        current_app.logger.error("Empty filename")
         return jsonify({'error': 'No file selected'}), 400
     
     # Get allowed extensions from config
-    allowed_extensions = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'doc', 'docx', 'zip'}
+    allowed_extensions = current_app.config.get('ALLOWED_EXTENSIONS')
+    current_app.logger.info(f"Allowed extensions config: {allowed_extensions}")
     
-    if not allowed_file(file.filename, allowed_extensions):
+    # If ALLOWED_EXTENSIONS is None or empty, allow all file types
+    if allowed_extensions and not allowed_file(file.filename, allowed_extensions):
+        current_app.logger.error(f"File type not allowed: {file.filename}")
         return jsonify({
             'error': 'File type not allowed',
             'allowed_types': list(allowed_extensions)
@@ -85,6 +98,7 @@ def upload_file(user):
         file.seek(0, 2)  # Seek to end
         file_size = file.tell()
         file.seek(0)  # Reset to beginning
+        current_app.logger.info(f"File size: {file_size} bytes ({file_size / 1024 / 1024:.2f} MB)")
         
         # Create database record
         new_file = File(

@@ -121,32 +121,58 @@ class ApiClient {
   }
 
   // File management methods
-  async uploadFile(file: File): Promise<FileUploadResponse> {
+  async uploadFile(
+    file: File,
+    onProgress?: (progress: number) => void
+  ): Promise<FileUploadResponse> {
     const formData = new FormData();
     formData.append('file', file);
 
     const url = `${this.baseUrl}/api/files`;
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
-    const headers: HeadersInit = {};
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    // Don't set Content-Type for FormData - browser will set it with boundary
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers,
-      body: formData,
+      // Track upload progress
+      if (onProgress) {
+        xhr.upload.addEventListener('progress', (event) => {
+          if (event.lengthComputable) {
+            const percentComplete = (event.loaded / event.total) * 100;
+            onProgress(percentComplete);
+          }
+        });
+      }
+
+      xhr.addEventListener('load', () => {
+        try {
+          const data = JSON.parse(xhr.responseText);
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve(data);
+          } else {
+            reject(new Error(data.error || 'Failed to upload file'));
+          }
+        } catch (error) {
+          reject(new Error('Failed to parse response'));
+        }
+      });
+
+      xhr.addEventListener('error', () => {
+        reject(new Error('Network error occurred'));
+      });
+
+      xhr.addEventListener('abort', () => {
+        reject(new Error('Upload cancelled'));
+      });
+
+      xhr.open('POST', url);
+      
+      if (token) {
+        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+      }
+
+      xhr.send(formData);
     });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to upload file');
-    }
-
-    return data;
   }
 
   async listFiles(page: number = 1, size: number = 10): Promise<FileListResponse> {

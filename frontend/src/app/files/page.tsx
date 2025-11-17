@@ -18,6 +18,7 @@ export default function FilesPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [renameFileId, setRenameFileId] = useState<number | null>(null);
   const [newFilename, setNewFilename] = useState('');
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -54,7 +55,12 @@ export default function FilesPage() {
       setUploading(true);
       setError('');
       setSuccess('');
-      await api.uploadFile(file);
+      setUploadProgress(0);
+      
+      await api.uploadFile(file, (progress) => {
+        setUploadProgress(Math.round(progress));
+      });
+      
       setSuccess('File uploaded successfully!');
       loadFiles();
       if (fileInputRef.current) {
@@ -64,6 +70,7 @@ export default function FilesPage() {
       setError(err instanceof Error ? err.message : 'Failed to upload file');
     } finally {
       setUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -181,8 +188,21 @@ export default function FilesPage() {
               )}
             </label>
             <p className="mt-2 text-sm text-gray-500">
-              Supported: txt, pdf, png, jpg, jpeg, gif, doc, docx, zip (Max 100MB)
+              All file types are supported (Max 500MB)
             </p>
+            
+            {/* Progress Bar */}
+            {uploading && (
+              <div className="mt-4">
+                <div className="bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                  <div
+                    className="bg-blue-600 h-2.5 rounded-full transition-all duration-300 ease-out"
+                    style={{ width: `${uploadProgress}%` }}
+                  ></div>
+                </div>
+                <p className="mt-2 text-sm text-gray-600">{uploadProgress}% uploaded</p>
+              </div>
+            )}
           </div>
 
           {/* Messages */}
