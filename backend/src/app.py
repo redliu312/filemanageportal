@@ -56,6 +56,13 @@ else:
 app.logger.info(f"Starting Flask app with log level: {log_level}")
 app.logger.info(f"Environment: {os.getenv('FLASK_ENV', 'development')}")
 app.logger.info(f"Storage mode: {os.getenv('STORAGE_MODE', 'local')}")
+app.logger.info(f"MAX_CONTENT_LENGTH: {app.config.get('MAX_CONTENT_LENGTH')} bytes")
+app.logger.info(f"MAX_FILE_SIZE env: {os.getenv('MAX_FILE_SIZE', 'not set')}")
+
+# Ensure MAX_CONTENT_LENGTH is set for Flask to enforce file size limits
+if app.config.get('MAX_CONTENT_LENGTH') is None:
+    app.logger.warning("MAX_CONTENT_LENGTH not set, setting to default 100MB")
+    app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024
 
 # Initialize extensions
 db.init_app(app)
