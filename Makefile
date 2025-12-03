@@ -34,7 +34,7 @@ docker-down:
 	docker-compose down
 
 docker-build:
-	docker-compose build
+	docker-compose build --no-cache
 
 docker-logs:
 	docker-compose logs -f
