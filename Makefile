@@ -1,33 +1,34 @@
-.PHONY: help setup dev docker-up docker-down docker-build docker-logs docker-db-init supabase-up supabase-down supabase-db-init clean test lint
+.PHONY: help setup docker-up docker-down docker-build docker-logs docker-db-init supabase-up supabase-down supabase-db-init clean test lint
 
 # Default target
 help:
 	@echo "Available commands:"
-	@echo "  make setup        - Initial project setup with Docker"
-	@echo "  make dev          - Run development servers locally"
-	@echo "  make docker-up    - Start Docker containers"
-	@echo "  make docker-down  - Stop Docker containers"
-	@echo "  make docker-build - Rebuild Docker containers"
-	@echo "  make docker-logs  - View Docker logs"
-	@echo "  make docker-db-init - Initialize database tables"
-	@echo "  make supabase-up  - Start with Supabase backend"
-	@echo "  make supabase-down - Stop Supabase containers"
+	@echo ""
+	@echo "Docker Development (Local PostgreSQL):"
+	@echo "  make setup           - Initial project setup with Docker"
+	@echo "  make docker-up       - Start Docker containers"
+	@echo "  make docker-down     - Stop Docker containers"
+	@echo "  make docker-build    - Rebuild Docker containers"
+	@echo "  make docker-logs     - View Docker logs"
+	@echo "  make docker-db-init  - Initialize database tables"
+	@echo ""
+	@echo "Docker Development (Supabase Backend):"
+	@echo "  make supabase-up     - Start with Supabase backend"
+	@echo "  make supabase-down   - Stop Supabase containers"
 	@echo "  make supabase-db-init - Initialize Supabase database"
-	@echo "  make clean        - Clean build artifacts"
-	@echo "  make test         - Run tests"
-	@echo "  make lint         - Run linters"
+	@echo ""
+	@echo "Utilities:"
+	@echo "  make clean           - Clean build artifacts"
+	@echo "  make test            - Run tests"
+	@echo "  make lint            - Run linters"
 
 # Setup project
 setup:
 	@./setup.sh
 
-# Run development servers
-dev:
-	@./dev.sh
-
 # Docker commands
 docker-up:
-	docker-compose up -d
+	docker-compose up
 
 docker-down:
 	docker-compose down

@@ -216,16 +216,34 @@ sequenceDiagram
 
 ## Quick Start
 
+### Prerequisites
+- Docker and Docker Compose
+- Git
 
-### Using Scripts
+### Development with Local PostgreSQL
+
+1. Clone the repository and setup:
 ```bash
-# Setup with Docker
+git clone <repository-url>
+cd filemanageportal
 ./setup.sh
-
-
 ```
 
-### Using Supabase Backend
+2. Start all services:
+```bash
+make docker-up
+```
+
+3. Initialize the database:
+```bash
+make docker-db-init
+```
+
+4. Access the application:
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:8000
+
+### Development with Supabase Backend
 
 1. Create a `.env.production` file in the backend directory:
    ```bash
@@ -249,101 +267,58 @@ sequenceDiagram
    - Frontend: http://localhost:3000
    - Backend API: http://localhost:8000 (connected to Supabase)
 
-### Manual Setup
+### Stopping Services
 
-#### Prerequisites
-- Docker and Docker Compose (for containerized development)
-- Node.js 18+ (for local frontend development)
-- Python 3.13 (for local backend development)
-- uv (Python package manager)
+```bash
+# Stop local PostgreSQL setup
+make docker-down
 
-#### Local Development with Docker
-
-1. Clone the repository
-2. Run the setup script:
-   ```bash
-   ./setup.sh
-   ```
-
-3. Initialize the database:
-   ```bash
-   make docker-db-init
-   ```
-
-4. Access the applications:
-   - Frontend: http://localhost:3000
-   - Backend API: http://localhost:8000
-
-#### Local Development without Docker
-
-1. Run the development script:
-   ```bash
-   ./dev.sh
-   # or
-   make dev
-   ```
-
-2. Or manually set up each service:
-
-   **Backend:**
-   ```bash
-   cd backend
-   uv venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-   uv pip install -r requirements.txt
-   cp .env.example .env
-   python src/app.py
-   ```
-
-   **Frontend:**
-   ```bash
-   cd frontend
-   npm install
-   cp .env.example .env.local
-   npm run dev
-   ```
+# Stop Supabase setup
+make supabase-down
+```
 
 ## Available Commands
 
-### Make Commands
-- `make help` - Show available commands
-- `make setup` - Initial project setup
-- `make dev` - Run development servers
-- `make docker-up` - Start Docker containers
-- `make docker-down` - Stop Docker containers
+### Docker Development Commands
+
+**Local PostgreSQL:**
+- `make setup` - Initial project setup with Docker
+- `make docker-up` - Start all Docker containers
+- `make docker-down` - Stop all Docker containers
 - `make docker-build` - Rebuild Docker containers
-- `make docker-logs` - View Docker logs
+- `make docker-logs` - View container logs
 - `make docker-db-init` - Initialize database tables
+
+**Supabase Backend:**
 - `make supabase-up` - Start with Supabase backend
 - `make supabase-down` - Stop Supabase containers
 - `make supabase-db-init` - Initialize Supabase database
-- `make clean` - Clean build artifacts
-- `make test` - Run tests
-- `make lint` - Run linters
 
-### NPM Scripts (Frontend)
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run start` - Start production server
-- `npm run lint` - Run ESLint
-- `npm run type-check` - Run TypeScript checking
+**Utilities:**
+- `make clean` - Clean build artifacts
+- `make test` - Run tests (inside containers)
+- `make lint` - Run linters (inside containers)
+- `make help` - Show all available commands
 
 ## Environment Variables
 
-### Backend (.env)
-```bash
-FLASK_DEBUG=True
-SECRET_KEY=your-secret-key-here
-ENVIRONMENT=development
-PORT=5000
-ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5000
-```
+### Backend Configuration
 
-### Frontend (.env.local)
-```bash
-NEXT_PUBLIC_API_URL=http://localhost:5000
-NODE_ENV=development
-```
+**For Local PostgreSQL** (docker-compose.yml):
+- Environment variables are set in the docker-compose.yml file
+- Database URL: `postgresql://postgres:postgres@db:5432/filesvc`
+- Backend runs on port 8000 (mapped from container port 5000)
+
+**For Supabase** (docker-compose.supabase.yml):
+- Create `backend/.env.production` from `backend/.env.production.example`
+- Add your Supabase credentials (DATABASE_URL, SUPABASE_URL, SUPABASE_KEY)
+- Storage mode automatically set to Supabase
+
+### Frontend Configuration
+
+Frontend environment is configured in docker-compose files:
+- `NEXT_PUBLIC_API_URL=http://localhost:8000`
+- Automatically connects to backend on port 8000
 
 ## Deployment
 
@@ -369,17 +344,38 @@ Both frontend and backend are configured for deployment on Vercel.
 
 ## Testing
 
-Run tests for both frontend and backend:
+Run tests inside Docker containers:
 ```bash
 make test
 ```
 
-Or individually:
-```bash
-# Backend tests
-cd backend && python -m pytest
+This will execute tests for both frontend and backend within their respective containers.
 
-# Frontend tests
-cd frontend && npm test
+## Troubleshooting
+
+### Port Already in Use
+If you see port conflict errors:
+```bash
+# Check what's using the ports
+lsof -i :3000 -i :8000 -i :5432
+
+# Stop any conflicting services
+make docker-down
+```
+
+### Database Connection Issues
+```bash
+# Reinitialize the database
+make docker-db-init
+
+# Or for Supabase
+make supabase-db-init
+```
+
+### Container Issues
+```bash
+# Rebuild containers from scratch
+make docker-build
+make docker-up
 ```
 

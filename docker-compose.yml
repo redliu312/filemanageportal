@@ -32,8 +32,6 @@ services:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/filesvc
       - SECRET_KEY=dev-secret-key-change-in-production
     volumes:
-      - ./backend:/app
-      - backend-venv:/app/.venv
       - upload-files:/app/uploads
     depends_on:
       db:
@@ -42,14 +40,12 @@ services:
       - app-network
     command: >
       sh -c "
-      if [ ! -f /app/.venv/bin/activate ]; then
-        uv venv /app/.venv && . /app/.venv/bin/activate && uv pip install -r /app/requirements.txt
-      fi &&
-      . /app/.venv/bin/activate && uv pip install -r /app/requirements.txt &&
       echo 'Waiting for database...' &&
       sleep 5 &&
-      python manage.py init 2>/dev/null || echo 'Database already initialized' &&
-      python -m flask run --host=0.0.0.0 --port=5000
+      echo 'Initializing database...' &&
+      /app/.venv/bin/python manage.py init 2>/dev/null || echo 'Database already initialized' &&
+      echo 'Starting Flask application...' &&
+      /app/.venv/bin/python -m flask run --host=0.0.0.0 --port=5000
       "
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
@@ -85,6 +81,5 @@ networks:
     driver: bridge
 
 volumes:
-  backend-venv:
   postgres-data:
   upload-files:
